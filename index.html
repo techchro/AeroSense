@@ -14,477 +14,56 @@
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #141a2e 100%);
-      min-height: 100vh;
-      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 40px 20px;
-      position: relative;
-      color: #fff;
-    }
-
-    body::before {
-      content: '';
-      position: fixed;
-      top: -50%;
-      right: -10%;
-      width: 400px;
-      height: 400px;
-      background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    body::after {
-      content: '';
-      position: fixed;
-      bottom: -20%;
-      left: -10%;
-      width: 300px;
-      height: 300px;
-      background: radial-gradient(circle, rgba(34, 211, 238, 0.15) 0%, transparent 70%);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .container {
-      max-width: 1300px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
-    }
-
-    /* HEADER */
-    .header-content {
-      text-align: center;
-      margin-bottom: 50px;
-      animation: slideDown 0.8s ease;
-    }
-
-    h1 {
-      font-size: 3.5rem;
-      font-weight: 900;
-      margin-bottom: 10px;
-      background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 50%, #06b6d4 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      letter-spacing: -1px;
-    }
-
-    .subtitle {
-      font-size: 1.1rem;
-      color: rgba(255, 255, 255, 0.7);
-      font-weight: 300;
-      letter-spacing: 1px;
-    }
-
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes scaleIn {
-      from {
-        opacity: 0;
-        transform: scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    @keyframes glow {
-      0%, 100% {
-        box-shadow: 0 0 20px rgba(168, 139, 250, 0.35), 0 20px 50px rgba(0, 0, 0, 0.3);
-      }
-      50% {
-        box-shadow: 0 0 30px rgba(168, 139, 250, 0.5), 0 20px 60px rgba(0, 0, 0, 0.4);
-      }
-    }
-
-    /* STATS GRID */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 25px;
-      margin-bottom: 40px;
-    }
-
-    .stat-card {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 25px;
-      padding: 35px 25px;
-      backdrop-filter: blur(15px);
-      border-left: 5px solid;
-      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      cursor: pointer;
-      animation: fadeInUp 0.6s ease;
-      overflow: hidden;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
-    }
-
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
-      pointer-events: none;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-15px);
-      border-color: rgba(168, 139, 250, 0.4);
-      background: rgba(168, 139, 250, 0.08);
-      animation: glow 2s ease infinite;
-    }
-
-    .stat-card.aqi { border-left-color: #ec4899; }
-    .stat-card.temp { border-left-color: #f97316; }
-    .stat-card.hum { border-left-color: #06b6d4; }
-    .stat-card.status { border-left-color: #10b981; }
-
-    .stat-icon {
-      font-size: 3rem;
-      margin-bottom: 15px;
-      transition: transform 0.4s;
-      position: relative;
-      z-index: 2;
-    }
-
-    .stat-card:hover .stat-icon {
-      transform: scale(1.25) rotate(-10deg);
-    }
-
-    .stat-card.aqi .stat-icon { color: #ec4899; }
-    .stat-card.temp .stat-icon { color: #f97316; }
-    .stat-card.hum .stat-icon { color: #06b6d4; }
-    .stat-card.status .stat-icon { color: #10b981; }
-
-    .stat-label {
-      font-size: 0.8rem;
-      color: rgba(255, 255, 255, 0.6);
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      margin-bottom: 12px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .stat-value {
-      font-size: 2.8rem;
-      font-weight: 800;
-      color: #fff;
-      position: relative;
-      z-index: 2;
-      background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    /* CONTROLS */
-    .controls-section {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 35px;
-      flex-wrap: wrap;
-      animation: fadeInUp 0.8s ease 0.2s both;
-    }
-
-    .form-select {
-      flex: 1;
-      min-width: 220px;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      border: 1.5px solid rgba(255, 255, 255, 0.2);
-      border-radius: 15px;
-      padding: 14px 18px;
-      font-weight: 600;
-      font-size: 1rem;
-      backdrop-filter: blur(10px);
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .form-select option {
-      background: #1a1a2e;
-      color: white;
-    }
-
-    .form-select:hover {
-      border-color: rgba(168, 139, 250, 0.6);
-      background: rgba(168, 139, 250, 0.09);
-    }
-
-    .form-select:focus {
-      outline: none;
-      border-color: #a78bfa;
-      background: rgba(168, 139, 250, 0.12);
-      box-shadow: 0 0 20px rgba(168, 139, 250, 0.3);
-    }
-
-    .btn-modern {
-      background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 100%);
-      color: #fff;
-      border: none;
-      border-radius: 15px;
-      padding: 14px 35px;
-      font-weight: 700;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      box-shadow: 0 10px 30px rgba(168, 139, 250, 0.3);
-      position: relative;
-      overflow: hidden;
-      min-width: 200px;
-    }
-
-    .btn-modern::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 0;
-      height: 0;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      transform: translate(-50%, -50%);
-      transition: width 0.6s, height 0.6s;
-      z-index: 0;
-    }
-
-    .btn-modern:hover::before {
-      width: 300px;
-      height: 300px;
-    }
-
-    .btn-modern:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 15px 40px rgba(168, 139, 250, 0.4);
-    }
-
-    .btn-modern span {
-      position: relative;
-      z-index: 1;
-    }
-
-    /* LEGEND */
-    .legend-section {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 25px;
-      padding: 35px;
-      backdrop-filter: blur(15px);
-      margin-bottom: 35px;
-      animation: fadeInUp 0.8s ease 0.4s both;
-    }
-
-    .legend-title {
-      font-size: 1.2rem;
-      font-weight: 800;
-      margin-bottom: 25px;
-      color: #a78bfa;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .legend-items {
-      display: flex;
-      gap: 15px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 12px 18px;
-      border-radius: 12px;
-      transition: all 0.3s;
-      font-weight: 600;
-      font-size: 0.95rem;
-      color: rgba(255, 255, 255, 0.85);
-    }
-
-    .legend-item:hover {
-      transform: translateY(-4px);
-      border-color: rgba(168, 139, 250, 0.4);
-      background: rgba(168, 139, 250, 0.08);
-      box-shadow: 0 10px 30px rgba(168, 139, 250, 0.25);
-    }
-
-    .legend-color {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      transition: transform 0.3s;
-      border: 2px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .legend-item:hover .legend-color {
-      transform: scale(1.2);
-    }
-
-    /* MAP CONTAINER */
-    .map-wrapper {
-      border-radius: 25px;
-      overflow: hidden;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      animation: fadeInUp 0.8s ease 0.5s both;
-    }
-
-    #map {
-      height: 550px;
-      width: 100%;
-      background: linear-gradient(135deg, #0f3460 0%, #16213e 100%);
-    }
-
-    .leaflet-popup-content-wrapper {
-      background: rgba(26, 26, 46, 0.95) !important;
-      border-radius: 15px !important;
-      backdrop-filter: blur(10px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-
-    .leaflet-popup-content {
-      color: #fff !important;
-      font-weight: 600;
-      line-height: 1.8;
-      font-size: 0.95rem;
-    }
-
-    .leaflet-popup-tip {
-      background: rgba(26, 26, 46, 0.95) !important;
-      border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    }
-
-    /* RESPONSIVE */
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2.2rem;
-      }
-
-      .subtitle {
-        font-size: 0.95rem;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-      }
-
-      .stat-card {
-        min-height: 160px;
-      }
-
-      .stat-icon {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-      }
-
-      .stat-value {
-        font-size: 2rem;
-      }
-
-      .controls-section {
-        flex-direction: column;
-      }
-
-      .form-select,
-      .btn-modern {
-        width: 100%;
-        min-width: auto;
-      }
-
-      #map {
-        height: 400px;
-      }
-
-      .legend-section {
-        padding: 25px;
-      }
-
-      .legend-items {
-        justify-content: flex-start;
-      }
-    }
-  </style>
+  <!-- Fonts & premium stylesheet -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-<div class="container">
 
   <!-- HEADER -->
-  <div class="header-content">
-    <h1>🌍 Air Quality Monitor</h1>
-    <p class="subtitle">Real-Time Environmental Intelligence</p>
-  </div>
+  <h1> Air Quality Monitor</h1>
+<div class="container">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">AQ</div>
+      <div class="brand-text"><span>Air</span>Quality</div>
+    </div>
+    <nav class="navlinks">
+      <a class="nav-link" href="#">Overview</a>
+      <a class="nav-link" href="#map">Map</a>
+      <a class="nav-link" href="#">Insights</a>
+      <button class="btn-modern btn-cta" id="cta">Upgrade</button>
+    </nav>
+  </header>
 
-  <!-- STATS GRID -->
+  <!-- HEADER -->
+  <h1>🌍 Air Quality Monitor</h1>
+  <p class="subtitle">Real-Time Environmental Intelligence</p>
+
+  <!-- STATS -->
   <div class="stats-grid">
     <div class="stat-card aqi">
       <i class="stat-icon fas fa-wind"></i>
       <div class="stat-label">Air Quality Index</div>
       <div class="stat-value" id="mq">--</div>
     </div>
+
     <div class="stat-card temp">
       <i class="stat-icon fas fa-thermometer-half"></i>
       <div class="stat-label">Temperature</div>
       <div class="stat-value" id="temp">--</div>
     </div>
+
     <div class="stat-card hum">
       <i class="stat-icon fas fa-droplet"></i>
       <div class="stat-label">Humidity</div>
       <div class="stat-value" id="hum">--</div>
     </div>
+
     <div class="stat-card status">
       <i class="stat-icon fas fa-circle-check"></i>
-      <div class="stat-label">Status</div>
+      <div class="stat-label">Recommendation</div>
       <div class="stat-value" id="status">--</div>
     </div>
   </div>
@@ -496,21 +75,33 @@
       <option value="temp">🌡️ Map by Temperature</option>
       <option value="hum">💧 Map by Humidity</option>
     </select>
-    <button class="btn-modern" onclick="recenterMap()">
-      <span><i class="fas fa-crosshairs"></i> Re-center Map</span>
-    </button>
+    <button class="btn-modern" onclick="recenterMap()">🎯 Re-center Map</button>
   </div>
 
   <!-- LEGEND -->
-  <div class="legend-section">
-    <div class="legend-title">📍 Color Legend</div>
-    <div class="legend-items" id="colorLegend"></div>
+  <div id="legend" class="legend" aria-hidden="true">
+    <div class="legend-group" data-type="mq">
+      <div class="legend-item"><span class="chip" style="background:#2ecc71"></span><span class="label">Good (&lt;50)</span></div>
+      <div class="legend-item"><span class="chip" style="background:#f1c40f"></span><span class="label">Moderate (50–99)</span></div>
+      <div class="legend-item"><span class="chip" style="background:#e67e22"></span><span class="label">Unhealthy (100–149)</span></div>
+      <div class="legend-item"><span class="chip" style="background:#e74c3c"></span><span class="label">Hazardous (&ge;150)</span></div>
+    </div>
+
+    <div class="legend-group" data-type="temp">
+      <div class="legend-item"><span class="chip" style="background:#60a5fa"></span><span class="label">Cool (&lt;25°C)</span></div>
+      <div class="legend-item"><span class="chip" style="background:#fb923c"></span><span class="label">Warm (25–34°C)</span></div>
+      <div class="legend-item"><span class="chip" style="background:#ef4444"></span><span class="label">Hot (&ge;35°C)</span></div>
+    </div>
+
+    <div class="legend-group" data-type="hum">
+      <div class="legend-item"><span class="chip" style="background:#60a5fa"></span><span class="label">Low (&lt;40%)</span></div>
+      <div class="legend-item"><span class="chip" style="background:#34d399"></span><span class="label">Comfort (40–69%)</span></div>
+      <div class="legend-item"><span class="chip" style="background:#f59e0b"></span><span class="label">High (&ge;70%)</span></div>
+    </div>
   </div>
 
   <!-- MAP -->
-  <div class="map-wrapper">
-    <div id="map"></div>
-  </div>
+  <div id="map"></div>
 
 </div>
 
@@ -519,61 +110,23 @@
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <script>
-  // 🔴 REPLACE WITH YOUR FIREBASE URL
-  const FIREBASE_URL = "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app/air_quality/current.json";
+  /* 🔴 REPLACE WITH YOUR FIREBASE URL */
+  const FIREBASE_URL =
+  "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app/air_quality/current.json";
 
-  let mapInitialized = false;
-  let marker = null;
+  const map = L.map("map").setView([27.7,85.3],13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-  const map = L.map('map').setView([27.7, 85.3], 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  let marker=null;
 
-  const legends = {
-    mq: [
-      {c:"green", t:"0-50 Good"},
-      {c:"yellow", t:"50-100 Moderate"},
-      {c:"orange", t:"100-150 Unhealthy"},
-      {c:"red", t:"150-200 Very Unhealthy"}
-    ],
-    temp: [
-      {c:"blue", t:"<25°C Cool"},
-      {c:"orange", t:"25-35°C Warm"},
-      {c:"red", t:">35°C Hot"}
-    ],
-    hum: [
-      {c:"blue", t:"<40% Low"},
-      {c:"green", t:"40-70% Normal"},
-      {c:"orange", t:">70% High"}
-    ]
-  };
-
-  function getStatus(aqi){
-    if(aqi < 50) return "Good";
-    if(aqi < 100) return "Moderate";
-    if(aqi < 150) return "Bad";
-    return "Very Bad";
-  }
-
-  function getColor(type, val){
+  function getColor(type,val){
     if(type==="mq") return val<50?"green":val<100?"yellow":val<150?"orange":"red";
     if(type==="temp") return val<25?"blue":val<35?"orange":"red";
     if(type==="hum") return val<40?"blue":val<70?"green":"orange";
   }
 
-  function updateLegend(){
-    const type = mapOption.value;
-    colorLegend.innerHTML="";
-    legends[type].forEach(l=>{
-      colorLegend.innerHTML += `
-        <div class="legend-item">
-          <div class="legend-color" style="background:${l.c}"></div>
-          <span>${l.t}</span>
-        </div>`;
-    });
-  }
-
   function recenterMap(){
-    if(marker) map.setView(marker.getLatLng(), 15);
+    if(marker) map.setView(marker.getLatLng(),15);
   }
 
   async function fetchData(){
@@ -582,40 +135,41 @@
       const d = res.data;
       if(!d) return;
 
-      mq.innerText = d.mq;
-      temp.innerText = d.temp + " °C";
-      hum.innerText = d.hum + " %";
-      status.innerText = getStatus(d.mq);
+      document.getElementById("mq").innerText = d.mq ?? "--";
+      document.getElementById("temp").innerText = isNaN(d.temp) ? "--" : d.temp+" °C";
+      document.getElementById("hum").innerText = isNaN(d.hum) ? "--" : d.hum+" %";
+      document.getElementById("status").innerText = d.status || "--";
 
       const type = mapOption.value;
       const value = type==="mq"?d.mq:type==="temp"?d.temp:d.hum;
-      const color = getColor(type, value);
+      const color = getColor(type,value);
 
       if(marker) map.removeLayer(marker);
-      marker = L.circleMarker([d.lat, d.lon], {
-        radius: 12,
-        color, fillColor: color, fillOpacity: 0.7
+
+      marker = L.circleMarker([d.lat,d.lon],{
+        radius:12,
+        color:color,
+        fillColor:color,
+        fillOpacity:0.8
       }).addTo(map);
 
       marker.bindPopup(`
-        AQI: ${d.mq}<br>
-        Temp: ${d.temp}°C<br>
-        Hum: ${d.hum}%<br>
-        Status: ${getStatus(d.mq)}
+        <b>AQI:</b> ${d.mq}<br>
+        <b>Temp:</b> ${d.temp} °C<br>
+        <b>Humidity:</b> ${d.hum}%<br>
+        <b>Recommendation:</b> ${d.status}
       `);
 
-      if(!mapInitialized){
-        map.setView([d.lat, d.lon], 15);
-        mapInitialized = true;
-      }
-
-    }catch(e){ console.log(e); }
+    }catch(e){
+      console.log("Firebase error:",e);
+    }
   }
 
-  updateLegend();
-  mapOption.addEventListener("change", ()=>{updateLegend(); fetchData();});
-  setInterval(fetchData, 2000);
+  setInterval(fetchData,2000);
 </script>
+
+<script src="script.js"></script>
 
 </body>
 </html>
+
