@@ -4,65 +4,33 @@
   <meta charset="UTF-8">
   <title>AeroSense - Air Quality Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-
-  <!-- Fonts & custom CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Leaflet Heat plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js"></script>
 </head>
 
 <body>
-  <header class="header">
-    <h1>AeroSense</h1>
-  </header>
-
+  <header class="header"><h1>AeroSense</h1></header>
   <main class="container">
     <!-- Stats -->
     <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon fas fa-wind"></div>
-        <div class="stat-label">Air Quality</div>
-        <div class="stat-value" id="mq">--</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon fas fa-thermometer-half"></div>
-        <div class="stat-label">Temperature</div>
-        <div class="stat-value" id="temp">-- °C</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon fas fa-droplet"></div>
-        <div class="stat-label">Humidity</div>
-        <div class="stat-value" id="hum">-- %</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon fas fa-heartbeat"></div>
-        <div class="stat-label">Recommendation</div>
-        <div class="stat-value" id="status">--</div>
-      </div>
+      <div class="stat-card"><div class="stat-icon fas fa-wind"></div><div class="stat-label">Air Quality</div><div class="stat-value" id="mq">--</div></div>
+      <div class="stat-card"><div class="stat-icon fas fa-thermometer-half"></div><div class="stat-label">Temperature</div><div class="stat-value" id="temp">-- °C</div></div>
+      <div class="stat-card"><div class="stat-icon fas fa-droplet"></div><div class="stat-label">Humidity</div><div class="stat-value" id="hum">-- %</div></div>
+      <div class="stat-card"><div class="stat-icon fas fa-heartbeat"></div><div class="stat-label">Recommendation</div><div class="stat-value" id="status">--</div></div>
     </div>
 
-    <!-- Health advisory -->
-    <div class="advisory-card">
-      <h3>Health Advisory</h3>
-      <p id="healthAdvice">--</p>
-    </div>
+    <div class="advisory-card"><h3>Health Advisory</h3><p id="healthAdvice">--</p></div>
 
-    <!-- Last 30 km readings -->
-    <section class="last-readings">
-      <h3>Last 30 km Readings</h3>
+    <section class="last-readings"><h3>Last 30 km Readings</h3>
       <div id="readingsList" class="readings-list"></div>
       <div id="readingsLegend" class="readings-legend"></div>
     </section>
 
-    <!-- Map controls -->
     <div class="map-controls">
       <select id="mapType" class="form-select">
         <option value="mq">AQI Heatmap</option>
@@ -72,11 +40,9 @@
       <button class="btn btn-primary" onclick="recenterMap()">🎯 Re-center Device</button>
     </div>
 
-    <!-- Map -->
-    <div id="map"></div>
+    <div id="map" style="height:500px;"></div>
   </main>
 
-  <!-- JS -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script src="script.js"></script>
