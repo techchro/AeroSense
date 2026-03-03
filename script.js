@@ -1,13 +1,12 @@
-const FIREBASE_CURRENT = "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app/air_quality/current.json";
 const FIREBASE_HISTORY = "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app/air_quality/history.json";
+const FIREBASE_CURRENT = "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app/air_quality/current.json";
 
-const map = L.map("map").setView([27.7,85.3],13);
+const map = L.map("map").setView([27.55,84.5], 10);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 let deviceMarker = null;
 let localHistory = [];
-let historyMarkers = [];
-
+let historyCircles = [];
 const mapTypeSelect = document.getElementById("mapType");
 
 function getColor(type,val){
@@ -20,52 +19,57 @@ function recenterMap(){
   if(deviceMarker) map.setView(deviceMarker.getLatLng(),15);
 }
 
-// draw all history points as colored markers
+// Draw blended circles for history
 function drawHistory(){
-  historyMarkers.forEach(m=>map.removeLayer(m));
-  historyMarkers = [];
+  historyCircles.forEach(c=>map.removeLayer(c));
+  historyCircles = [];
   const type = mapTypeSelect.value;
+
   localHistory.forEach(h=>{
-    const color = getColor(type,type==="mq"?h.mq:type==="temp"?h.temp:h.hum);
-    const marker = L.circleMarker([h.lat,h.lon],{
-      radius:6,
+    const val = type==="mq"?h.mq:type==="temp"?h.temp:h.hum;
+    const color = getColor(type,val);
+    const circle = L.circle([h.lat,h.lon],{
+      radius: 80,       // larger for blending
       fillColor: color,
-      fillOpacity: 0.9,
+      fillOpacity: 0.15, // semi-transparent
       stroke: false
     }).addTo(map);
-    historyMarkers.push(marker);
+    historyCircles.push(circle);
   });
 }
 
-// draw device latest location
-function drawDevice(lat,lon,val,type,status,timestamp){
+// Draw latest device location
+function drawDevice(h){
+  const type = mapTypeSelect.value;
+  const val = type==="mq"?h.mq:type==="temp"?h.temp:h.hum;
   const color = getColor(type,val);
+
   if(deviceMarker) map.removeLayer(deviceMarker);
-  deviceMarker = L.circleMarker([lat,lon],{
+  deviceMarker = L.circleMarker([h.lat,h.lon],{
     radius:12,
     fillColor: color,
     fillOpacity: 1.0,
-    stroke: false
+    stroke:false
   }).addTo(map);
-  deviceMarker.bindPopup(`<b>AQI:</b>${type==="mq"?val:"--"}<br>
-                         <b>Temp:</b>${type==="temp"?val:"--"}<br>
-                         <b>Hum:</b>${type==="hum"?val:"--"}<br>
-                         <b>Status:</b>${status}<br>
-                         <b>Time:</b>${new Date(timestamp).toLocaleString()}`);
+  deviceMarker.bindPopup(`<b>AQI:</b>${h.mq}<br>
+                         <b>Temp:</b>${h.temp} °C<br>
+                         <b>Hum:</b>${h.hum}%<br>
+                         <b>Status:</b>${h.status}<br>
+                         <b>Time:</b>${new Date(h.timestamp).toLocaleString()}`);
 }
 
-// fetch history and draw
+// Fetch history from Firebase
 async function fetchHistory(){
   try{
     const res = await axios.get(FIREBASE_HISTORY);
     const data = res.data;
     if(!data) return;
-    localHistory = Object.values(data);
+    localHistory = Object.values(data).slice(-200); // last 200 readings
     drawHistory();
-  }catch(e){console.log("History fetch error:",e);}
+  }catch(e){console.log("History fetch error",e);}
 }
 
-// fetch current reading
+// Fetch current reading
 async function fetchCurrent(){
   try{
     const res = await axios.get(FIREBASE_CURRENT);
@@ -78,12 +82,8 @@ async function fetchCurrent(){
     document.getElementById("status").innerText = d.status ?? "--";
     document.getElementById("healthAdvice").innerText = d.status ?? "--";
 
-    const type = mapTypeSelect.value;
-    const val = type==="mq"?d.mq:type==="temp"?d.temp:d.hum;
-
-    drawDevice(d.lat,d.lon,val,type,d.status,d.timestamp);
-
-  }catch(e){console.log("Current fetch error:",e);}
+    drawDevice(d);
+  }catch(e){console.log("Current fetch error",e);}
 }
 
 mapTypeSelect.addEventListener("change",()=>{
@@ -91,10 +91,10 @@ mapTypeSelect.addEventListener("change",()=>{
   fetchCurrent();
 });
 
-// initial fetch
+// Initial fetch and update every 3 seconds
 fetchHistory();
 fetchCurrent();
 setInterval(()=>{
   fetchHistory();
   fetchCurrent();
-},5000);
+},3000);
