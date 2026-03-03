@@ -14,9 +14,9 @@ const mapTypeSelect = document.getElementById("mapType");
 
 // ================= Color scale =================
 function getColor(type,val){
-  if(type==="mq") return val<50?"#00ff00":val<100?"#ffff00":val<150?"#ff8000":"#ff0000";
-  if(type==="temp") return val<20?"#00bfff":val<30?"#ffa500":"#ff0000";
-  if(type==="hum") return val<40?"#00bfff":val<70?"#00ff00":"#ffa500";
+  if(type==="mq") return val<50?"#00ff88":val<100?"#ffff66":val<150?"#ff9933":"#ff4d4d";
+  if(type==="temp") return val<20?"#66ccff":val<30?"#ffb84d":"#ff4d4d";
+  if(type==="hum") return val<40?"#66ccff":val<70?"#66ff99":"#ffb84d";
 }
 
 // ================= Recenter =================
@@ -24,22 +24,37 @@ function recenterMap(){
   if(deviceMarker) map.setView(deviceMarker.getLatLng(),15);
 }
 
-// ================= Draw history =================
+// ================= Convert HEX to RGBA =================
+function hexToRGBA(hex,alpha){
+  const r = parseInt(hex.substring(1,3),16);
+  const g = parseInt(hex.substring(3,5),16);
+  const b = parseInt(hex.substring(5,7),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ================= Upgraded Draw History =================
 function drawHistory(){
+
   historyCircles.forEach(c=>map.removeLayer(c));
   historyCircles = [];
-  const type = mapTypeSelect.value;
 
-  localHistory.forEach(h=>{
+  const type = mapTypeSelect.value;
+  const totalPoints = localHistory.length;
+
+  localHistory.forEach((h,index)=>{
+
     if(!h.lat || !h.lon) return;
 
     const val = type==="mq"?h.mq:type==="temp"?h.temp:h.hum;
-    const color = getColor(type,val);
+    const baseColor = getColor(type,val);
+
+    const ageFactor = (index+1)/totalPoints;
+    const opacity = 0.05 + (ageFactor * 0.25);
 
     const circle = L.circle([h.lat,h.lon],{
-      radius: 80,
-      fillColor: color,
-      fillOpacity: 0.1,  // light blend
+      radius: 110,
+      fillColor: hexToRGBA(baseColor,opacity),
+      fillOpacity: opacity,
       stroke:false
     }).addTo(map);
 
@@ -55,39 +70,59 @@ function drawHistory(){
   });
 }
 
-// ================= Draw latest device =================
+// ================= Draw Current Device =================
 function drawDevice(d){
+
   const type = mapTypeSelect.value;
   const val = type==="mq"?d.mq:type==="temp"?d.temp:d.hum;
   const color = getColor(type,val);
 
   if(deviceMarker) map.removeLayer(deviceMarker);
+
   deviceMarker = L.circleMarker([d.lat,d.lon],{
-    radius:12,
+    radius:14,
     fillColor: color,
-    fillOpacity: 1.0,
+    fillOpacity: 0.9,
     stroke:false
   }).addTo(map);
 
-  deviceMarker.bindPopup(`<b>AQI:</b> ${d.mq}<br>
-                         <b>Temp:</b> ${d.temp} °C<br>
-                         <b>Hum:</b> ${d.hum}%<br>
-                         <b>Status:</b> ${d.status}<br>
-                         <b>Time:</b> ${new Date(d.timestamp).toLocaleString()}`);
+  deviceMarker.bindPopup(
+    `<b>AQI:</b> ${d.mq}<br>
+     <b>Temp:</b> ${d.temp} °C<br>
+     <b>Hum:</b> ${d.hum}%<br>
+     <b>Status:</b> ${d.status}<br>
+     <b>Time:</b> ${new Date(d.timestamp).toLocaleString()}`
+  );
 }
 
 // ================= Dynamic Legend =================
 function updateLegend(){
+
   const legendDiv = document.getElementById("readingsLegend");
   legendDiv.innerHTML = "";
+
   const type = mapTypeSelect.value;
   let items=[];
+
   if(type==="mq"){
-    items=[{c:"#00ff00",l:"Healthy"},{c:"#ffff00",l:"Moderate"},{c:"#ff8000",l:"Unhealthy"},{c:"#ff0000",l:"Hazardous"}];
+    items=[
+      {c:"#00ff88",l:"Healthy"},
+      {c:"#ffff66",l:"Moderate"},
+      {c:"#ff9933",l:"Unhealthy"},
+      {c:"#ff4d4d",l:"Hazardous"}
+    ];
   }else if(type==="temp"){
-    items=[{c:"#00bfff",l:"Cold"},{c:"#ffa500",l:"Warm"},{c:"#ff0000",l:"Hot"}];
+    items=[
+      {c:"#66ccff",l:"Cold"},
+      {c:"#ffb84d",l:"Warm"},
+      {c:"#ff4d4d",l:"Hot"}
+    ];
   }else if(type==="hum"){
-    items=[{c:"#00bfff",l:"Low"},{c:"#00ff00",l:"Comfort"},{c:"#ffa500",l:"High"}];
+    items=[
+      {c:"#66ccff",l:"Low"},
+      {c:"#66ff99",l:"Comfort"},
+      {c:"#ffb84d",l:"High"}
+    ];
   }
 
   items.forEach(i=>{
@@ -112,18 +147,62 @@ function updateLegend(){
   });
 }
 
-// ================= Fetch history =================
+// ================= Fetch History =================
 async function fetchHistory(){
   try{
     const res = await axios.get(FIREBASE_HISTORY);
     const data = res.data;
     if(!data) return;
-    localHistory = Object.values(data).slice(-200); // last 200 readings
+
+    // Object.values gives all history points
+    localHistory = Object.values(data);  // DO NOT slice
     drawHistory();
-  }catch(e){console.log("History fetch error",e);}
+
+  }catch(e){
+    console.log("History fetch error",e);
+  }
 }
 
-// ================= Fetch current =================
+// ================= Upgraded Draw History (all points) =================
+function drawHistory(){
+
+  // Remove old circles
+  historyCircles.forEach(c=>map.removeLayer(c));
+  historyCircles = [];
+
+  const type = mapTypeSelect.value;
+  const totalPoints = localHistory.length;
+
+  localHistory.forEach((h,index)=>{
+
+    if(!h.lat || !h.lon) return;
+
+    const val = type==="mq"?h.mq:type==="temp"?h.temp:h.hum;
+    const baseColor = getColor(type,val);
+
+    const ageFactor = (index+1)/totalPoints;
+    const opacity = 0.09 + (ageFactor * 0.2); // soft blend
+
+    const circle = L.circle([h.lat,h.lon],{
+      radius: 100,
+      fillColor: hexToRGBA(baseColor,opacity),
+      fillOpacity: opacity,
+      stroke:false
+    }).addTo(map);
+
+    circle.bindTooltip(
+      `<b>AQI:</b> ${h.mq}<br>
+       <b>Temp:</b> ${h.temp} °C<br>
+       <b>Hum:</b> ${h.hum}%<br>
+       <b>Time:</b> ${new Date(h.timestamp).toLocaleString()}`,
+       {direction:"top"}
+    );
+
+    historyCircles.push(circle);
+  });
+}
+
+// ================= Fetch Current =================
 async function fetchCurrent(){
   try{
     const res = await axios.get(FIREBASE_CURRENT);
@@ -136,7 +215,6 @@ async function fetchCurrent(){
     document.getElementById("status").innerText = d.status ?? "--";
     document.getElementById("healthAdvice").innerText = d.status ?? "--";
 
-    // Add latest reading to localHistory
     localHistory.push({
       lat:d.lat,
       lon:d.lon,
@@ -146,11 +224,15 @@ async function fetchCurrent(){
       status:d.status,
       timestamp:d.timestamp
     });
-    if(localHistory.length>200) localHistory.shift();
+
+    if(localHistory.length>300) localHistory.shift();
 
     drawHistory();
     drawDevice(d);
-  }catch(e){console.log("Current fetch error",e);}
+
+  }catch(e){
+    console.log("Current fetch error",e);
+  }
 }
 
 // ================= Map type change =================
@@ -164,18 +246,8 @@ mapTypeSelect.addEventListener("change",()=>{
 updateLegend();
 fetchHistory();
 fetchCurrent();
+
 setInterval(()=>{
   fetchHistory();
   fetchCurrent();
 },3000);
-
-
-// ================= Map search =================
-const geocoder = L.Control.geocoder({
-  defaultMarkGeocode: false
-}).addTo(map);
-
-geocoder.on('markgeocode', function(e) {
-  const center = e.geocode.center;
-  map.setView(center, 15);
-});
