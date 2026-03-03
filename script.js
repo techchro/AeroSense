@@ -5,103 +5,73 @@ const map = L.map("map").setView([27.7,85.3],13);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 let deviceMarker = null;
-let heatLayer = null;
 let localHistory = [];
+let historyMarkers = [];
 
 const mapTypeSelect = document.getElementById("mapType");
 
 function getColor(type,val){
-  if(type==="mq") return val<50?"green":val<100?"yellow":val<150?"orange":"red";
-  if(type==="temp") return val<20?"blue":val<30?"orange":"red";
-  if(type==="hum") return val<40?"blue":val<70?"green":"orange";
+  if(type==="mq") return val<50?"#00ff00":val<100?"#ffff00":val<150?"#ff8000":"#ff0000";
+  if(type==="temp") return val<20?"#00bfff":val<30?"#ffa500":"#ff0000";
+  if(type==="hum") return val<40?"#00bfff":val<70?"#00ff00":"#ffa500";
 }
 
 function recenterMap(){
   if(deviceMarker) map.setView(deviceMarker.getLatLng(),15);
 }
 
-function generateHeatmap(){
-  if(localHistory.length<2) return;
-  if(heatLayer) map.removeLayer(heatLayer);
-
+// draw all history points as colored markers
+function drawHistory(){
+  historyMarkers.forEach(m=>map.removeLayer(m));
+  historyMarkers = [];
   const type = mapTypeSelect.value;
-  const maxVal = type==="mq"?200:type==="temp"?50:100;
-
-  const points = localHistory.map(h=>{
-    let val = type==="mq"?h.mq:type==="temp"?h.temp:h.hum;
-    return [h.lat,h.lon,val/maxVal];
-  });
-
-  heatLayer = L.heatLayer(points,{radius:30,blur:20,maxZoom:17}).addTo(map);
-}
-
-function updateLastReadings(){
-  const listDiv = document.getElementById("readingsList");
-  listDiv.innerHTML = "";
-  const type = mapTypeSelect.value;
-  localHistory.slice().reverse().forEach(r=>{
-    const val = type==="mq"?r.mq:type==="temp"?r.temp:r.hum;
-    const color = getColor(type,val);
-    const card = document.createElement("div");
-    card.classList.add("reading-card");
-    card.style.border=`2px solid ${color}`;
-    card.innerHTML=`
-      <p><b>${type==="mq"?"AQI":type==="temp"?"Temp":"Hum"}</b></p>
-      <p style="color:${color}">${val}</p>
-      <p>${new Date(r.timestamp).toLocaleTimeString()}</p>
-    `;
-    listDiv.appendChild(card);
+  localHistory.forEach(h=>{
+    const color = getColor(type,type==="mq"?h.mq:type==="temp"?h.temp:h.hum);
+    const marker = L.circleMarker([h.lat,h.lon],{
+      radius:6,
+      fillColor: color,
+      fillOpacity: 0.9,
+      stroke: false
+    }).addTo(map);
+    historyMarkers.push(marker);
   });
 }
 
-function updateDynamicLegend(){
-  const legendDiv = document.getElementById("readingsLegend");
-  legendDiv.innerHTML = "";
-  const type = mapTypeSelect.value;
-  let items=[];
-  if(type==="mq") items=[{c:"green",l:"Healthy"},{c:"yellow",l:"Moderate"},{c:"orange",l:"Unhealthy"},{c:"red",l:"Hazardous"}];
-  else if(type==="temp") items=[{c:"blue",l:"Cold"},{c:"orange",l:"Warm"},{c:"red",l:"Hot"}];
-  else if(type==="hum") items=[{c:"blue",l:"Low"},{c:"green",l:"Comfort"},{c:"orange",l:"High"}];
-  items.forEach(i=>{
-    const box=document.createElement("div");
-    box.style.display="flex";
-    box.style.alignItems="center";
-    box.style.marginRight="12px";
-    const color=document.createElement("span");
-    color.style.background=i.c;
-    color.style.width="18px";
-    color.style.height="18px";
-    color.style.borderRadius="4px";
-    color.style.marginRight="6px";
-    const label=document.createElement("span");
-    label.innerText=i.l;
-    box.appendChild(color);
-    box.appendChild(label);
-    legendDiv.appendChild(box);
-  });
+// draw device latest location
+function drawDevice(lat,lon,val,type,status,timestamp){
+  const color = getColor(type,val);
+  if(deviceMarker) map.removeLayer(deviceMarker);
+  deviceMarker = L.circleMarker([lat,lon],{
+    radius:12,
+    fillColor: color,
+    fillOpacity: 1.0,
+    stroke: false
+  }).addTo(map);
+  deviceMarker.bindPopup(`<b>AQI:</b>${type==="mq"?val:"--"}<br>
+                         <b>Temp:</b>${type==="temp"?val:"--"}<br>
+                         <b>Hum:</b>${type==="hum"?val:"--"}<br>
+                         <b>Status:</b>${status}<br>
+                         <b>Time:</b>${new Date(timestamp).toLocaleString()}`);
 }
 
-// fetch history for heatmap
+// fetch history and draw
 async function fetchHistory(){
   try{
     const res = await axios.get(FIREBASE_HISTORY);
     const data = res.data;
     if(!data) return;
-
-    localHistory = Object.values(data); // convert {key:reading} → array
-    generateHeatmap();
-    updateLastReadings();
-    updateDynamicLegend();
-
-  }catch(e){console.log("Firebase history error:",e);}
+    localHistory = Object.values(data);
+    drawHistory();
+  }catch(e){console.log("History fetch error:",e);}
 }
 
-// fetch current reading for cards
+// fetch current reading
 async function fetchCurrent(){
   try{
     const res = await axios.get(FIREBASE_CURRENT);
     const d = res.data;
     if(!d) return;
+
     document.getElementById("mq").innerText = d.mq ?? "--";
     document.getElementById("temp").innerText = d.temp+" °C";
     document.getElementById("hum").innerText = d.hum+" %";
@@ -110,22 +80,21 @@ async function fetchCurrent(){
 
     const type = mapTypeSelect.value;
     const val = type==="mq"?d.mq:type==="temp"?d.temp:d.hum;
-    const color = getColor(type,val);
-    if(deviceMarker) map.removeLayer(deviceMarker);
-    deviceMarker = L.circleMarker([d.lat,d.lon],{radius:12,color:color,fillColor:color,fillOpacity:0.8}).addTo(map);
-    deviceMarker.bindPopup(`<b>AQI:</b>${d.mq}<br><b>Temp:</b>${d.temp} °C<br><b>Hum:</b>${d.hum}%<br><b>Status:</b>${d.status}<br><b>Time:</b>${new Date(d.timestamp).toLocaleString()}`);
 
-  }catch(e){console.log("Firebase current error:",e);}
+    drawDevice(d.lat,d.lon,val,type,d.status,d.timestamp);
+
+  }catch(e){console.log("Current fetch error:",e);}
 }
 
 mapTypeSelect.addEventListener("change",()=>{
-  generateHeatmap();
-  updateLastReadings();
-  updateDynamicLegend();
+  drawHistory();
+  fetchCurrent();
 });
 
-// Initial fetch
+// initial fetch
 fetchHistory();
 fetchCurrent();
-setInterval(()=>{fetchCurrent(); fetchHistory();},5000);
-updateDynamicLegend();
+setInterval(()=>{
+  fetchHistory();
+  fetchCurrent();
+},5000);
