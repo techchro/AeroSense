@@ -49,7 +49,7 @@ function drawHistory(){
     const baseColor = getColor(type,val);
 
     const ageFactor = (index+1)/totalPoints;
-    const opacity = 0.05 + (ageFactor * 0.25);
+    const opacity = 0.1 + (ageFactor * 0.3);
 
     const circle = L.circle([h.lat,h.lon],{
       radius: 110,
@@ -251,3 +251,4 @@ setInterval(()=>{
   fetchHistory();
   fetchCurrent();
 },3000);
+
