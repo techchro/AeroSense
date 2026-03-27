@@ -3,18 +3,33 @@
 const FIREBASE_CURRENT = "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app/air_quality/current.json";
 const FIREBASE_HISTORY = "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app/air_quality/history.json";
 
-const map = L.map("map").setView([27.55,84.5], 10);
+const map = L.map("map-container").setView([27.55,84.5], 10);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
 let deviceMarker = null;
 let historyCircles = [];
-let localHistory = [];
+
+const manualHistory = [
+  {location:"Bharatpur", lat:27.6713, lon:85.4122, mq:124, temp:29, hum:68, status:"Moderate", timestamp: Date.now() - 600000},
+  {location:"Tandi", lat:27.6195, lon:85.3911, mq:125, temp:30, hum:70, status:"Moderate", timestamp: Date.now() - 540000},
+  {location:"Parsa", lat:27.2450, lon:84.8161, mq:120, temp:31, hum:66, status:"Moderate", timestamp: Date.now() - 480000}
+];
+
+let localHistory = [...manualHistory];
 
 const mapTypeSelect = document.getElementById("mapType");
 
+// ================= Smooth Scrolling Function =================
+function scrollToSection(sectionId){
+  const section = document.getElementById(sectionId);
+  if(section){
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 // ================= Color scale =================
 function getColor(type,val){
-  if(type==="mq") return val<50?"#00ff88":val<100?"#ffff66":val<150?"#ff9933":"#ff4d4d";
+  if(type==="mq") return val<50?"#00ff88":val<100?"#ffff00":val<150?"#ff9933":"#ff4d4d";
   if(type==="temp") return val<20?"#66ccff":val<30?"#ffb84d":"#ff4d4d";
   if(type==="hum") return val<40?"#66ccff":val<70?"#66ff99":"#ffb84d";
 }
@@ -49,7 +64,7 @@ function drawHistory(){
     const baseColor = getColor(type,val);
 
     const ageFactor = (index+1)/totalPoints;
-    const opacity = 0.1 + (ageFactor * 0.3);
+    const opacity = 0.1 + (ageFactor * 0.25);
 
     const circle = L.circle([h.lat,h.lon],{
       radius: 110,
@@ -99,15 +114,16 @@ function drawDevice(d){
 function updateLegend(){
 
   const legendDiv = document.getElementById("readingsLegend");
+  if(!legendDiv) return;
   legendDiv.innerHTML = "";
 
-  const type = mapTypeSelect.value;
+  const type = (mapTypeSelect && mapTypeSelect.value) ? mapTypeSelect.value : "mq";
   let items=[];
 
   if(type==="mq"){
     items=[
       {c:"#00ff88",l:"Healthy"},
-      {c:"#ffff66",l:"Moderate"},
+      {c:"#ffff00",l:"Moderate"},
       {c:"#ff9933",l:"Unhealthy"},
       {c:"#ff4d4d",l:"Hazardous"}
     ];
@@ -126,51 +142,64 @@ function updateLegend(){
   }
 
   items.forEach(i=>{
-    const box=document.createElement("div");
-    box.style.display="flex";
-    box.style.alignItems="center";
-    box.style.marginRight="12px";
+    const itemDiv = document.createElement("div");
+    itemDiv.className = "legend-item";
 
-    const color=document.createElement("span");
-    color.style.background=i.c;
-    color.style.width="18px";
-    color.style.height="18px";
-    color.style.borderRadius="4px";
-    color.style.marginRight="6px";
+    const colorDiv = document.createElement("div");
+    colorDiv.className = "legend-color";
+    colorDiv.style.background = i.c;
 
-    const label=document.createElement("span");
-    label.innerText=i.l;
+    const labelDiv = document.createElement("div");
+    labelDiv.className = "legend-label";
+    labelDiv.innerText = i.l;
 
-    box.appendChild(color);
-    box.appendChild(label);
-    legendDiv.appendChild(box);
+    itemDiv.appendChild(colorDiv);
+    itemDiv.appendChild(labelDiv);
+    legendDiv.appendChild(itemDiv);
   });
 }
 
-// ================= Fetch History =================
+// ================= Render Readings List =================
+function renderReadingsList(){
+  const readingsDiv = document.getElementById("readingsList");
+  if(!readingsDiv) return;
+
+  const latest = localHistory.slice(-10).reverse();
+  readingsDiv.innerHTML = latest.map(h => `
+    <div class="reading-card">
+      <p style="font-weight:700; color: var(--text);">${h.location || "Unknown"}</p>
+      <p style="margin:4px 0; color: var(--muted);">AQI: <strong>${h.mq ?? "--"}</strong></p>
+      <p style="margin:4px 0; color: var(--muted);">Temp: ${h.temp ?? "--"} °C</p>
+      <p style="margin:4px 0; color: var(--muted);">Hum: ${h.hum ?? "--"}%</p>
+    </div>
+  `).join("");
+}
+
+// ================= Fetch History (Manual Sample Only) =================
 async function fetchHistory(){
   try{
-    const res = await axios.get(FIREBASE_HISTORY);
-    const data = res.data;
-    if(!data) return;
-
-    // Object.values gives all history points
-    localHistory = Object.values(data);  // DO NOT slice
+    // Use only local sample entries; do not fetch from Firebase
+    localHistory = [...manualHistory];
     drawHistory();
-
+    renderReadingsList();
+    updateLegend();
   }catch(e){
-    console.log("History fetch error",e);
+    console.log("Manual history update error", e);
   }
 }
 
 // ================= Upgraded Draw History (all points) =================
 function drawHistory(){
 
+  if(!mapTypeSelect){
+    return;
+  }
+
   // Remove old circles
   historyCircles.forEach(c=>map.removeLayer(c));
   historyCircles = [];
 
-  const type = mapTypeSelect.value;
+  const type = mapTypeSelect.value || "mq";
   const totalPoints = localHistory.length;
 
   localHistory.forEach((h,index)=>{
@@ -181,7 +210,7 @@ function drawHistory(){
     const baseColor = getColor(type,val);
 
     const ageFactor = (index+1)/totalPoints;
-    const opacity = 0.09 + (ageFactor * 0.2); // soft blend
+    const opacity = 0.3 + (ageFactor * 0.5); // darker history points
 
     const circle = L.circle([h.lat,h.lon],{
       radius: 100,
@@ -202,36 +231,30 @@ function drawHistory(){
   });
 }
 
-// ================= Fetch Current =================
+// ================= Fetch Current (Manual Sample Only) =================
 async function fetchCurrent(){
   try{
-    const res = await axios.get(FIREBASE_CURRENT);
-    const d = res.data;
-    if(!d) return;
+    const d = manualHistory[0] || manualHistory[manualHistory.length - 1] || {location: 'Sample', lat: 27.55, lon: 84.5, mq: 120, temp: 29, hum: 67, status: 'Moderate', timestamp: Date.now()};
 
     document.getElementById("mq").innerText = d.mq ?? "--";
-    document.getElementById("temp").innerText = d.temp+" °C";
-    document.getElementById("hum").innerText = d.hum+" %";
+    document.getElementById("temp").innerText = (d.temp!==undefined ? d.temp : "--") + " °C";
+    document.getElementById("hum").innerText = (d.hum!==undefined ? d.hum : "--") + " %";
     document.getElementById("status").innerText = d.status ?? "--";
     document.getElementById("healthAdvice").innerText = d.status ?? "--";
 
-    localHistory.push({
-      lat:d.lat,
-      lon:d.lon,
-      mq:d.mq,
-      temp:d.temp,
-      hum:d.hum,
-      status:d.status,
-      timestamp:d.timestamp
-    });
+    localHistory = [...manualHistory];
 
-    if(localHistory.length>300) localHistory.shift();
+    if(localHistory.length > 300) localHistory = localHistory.slice(-300);
 
-    drawHistory();
+    if(mapTypeSelect){
+      drawHistory();
+      updateLegend();
+    }
     drawDevice(d);
+    renderReadingsList();
 
   }catch(e){
-    console.log("Current fetch error",e);
+    console.log("Manual current update error",e);
   }
 }
 
@@ -240,10 +263,12 @@ mapTypeSelect.addEventListener("change",()=>{
   drawHistory();
   fetchCurrent();
   updateLegend();
+  renderReadingsList();
 });
 
 // ================= Init =================
 updateLegend();
+renderReadingsList();
 fetchHistory();
 fetchCurrent();
 
@@ -251,4 +276,3 @@ setInterval(()=>{
   fetchHistory();
   fetchCurrent();
 },3000);
-
