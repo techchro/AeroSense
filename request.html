@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>AeroSense Request</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #f7f8fa;
+  --panel: #ffffff;
+  --border: #dde4ea;
+  --text: #1f2937;
+  --muted: #64748b;
+  --accent: #0ea5e9;
+  --accent-soft: #e0f2fe;
+  --success: #16a34a;
+  --danger: #ef4444;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.5rem;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+}
+
+.navbar h1 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.navbar a {
+  color: var(--text);
+  text-decoration: none;
+  margin-left: 1rem;
+  font-weight: 600;
+}
+
+.navbar a:hover { color: var(--accent); }
+
+.main-wrapper {
+  max-width: 1100px;
+  margin: 110px auto 30px;
+  padding: 0 1rem;
+}
+
+.section{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  padding: 1.4rem;
+  margin-bottom: 1.25rem;
+}
+
+h2{
+  margin: 0 0 1rem;
+  font-size: 1.5rem;
+  color: var(--text);
+  font-weight: 700;
+}
+
+#map{
+  height: 340px;
+  margin-top: 11px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+label {
+  color: var(--muted);
+  font-size: 0.94rem;
+  display: block;
+  margin-top: 0.8rem;
+}
+
+input, textarea, button, select {
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+textarea { min-height: 110px; resize: vertical; }
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.13);
+}
+
+.button-row {
+  margin-top: 0.8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+button {
+  border: none;
+  cursor: pointer;
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(14, 165, 233, 0.34);
+}
+
+button:active { transform: translateY(0); }
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background: #ffffff;
+  border: 1px solid var(--border);
+}
+
+th, td {
+  padding: 0.72rem 0.7rem;
+  border: 1px solid var(--border);
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+th {
+  background: #f1f5f9;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+tbody tr:hover { background: #eff6ff; }
+
+@media (max-width: 768px) {
+  .navbar { flex-wrap: wrap; gap: 0.5rem; }
+  .navbar h1 { flex:1 0 100%; }
+  .main-wrapper { margin-top: 100px; }
+  .button-row { flex-direction: column; }
+}
+</style>
+
+</head>
+
+
+<body>
+
+<nav class="navbar">
+  <h1>AeroSense Request</h1>
+  <div>
+    <a href="index.html">Dashboard</a>
+    <a href="#" onclick="location.reload();">Refresh</a>
+  </div>
+</nav>
+
+<div class="main-wrapper">
+
+<!-- ================= REQUEST SECTION ================= -->
+
+<div class="section">
+
+<h2>Request Air Quality Measurement</h2>
+
+<form id="requestForm">
+
+<label>Address</label>
+<input type="text" id="address" placeholder="Auto filled when map clicked">
+
+<label>Message</label>
+<textarea id="message" placeholder="Write your request"></textarea>
+
+<button type="button" onclick="getLocation()">Use My Location</button>
+
+<label>Select Location Manually</label>
+
+<div id="map"></div>
+
+<input type="hidden" id="lat">
+<input type="hidden" id="lng">
+
+<button type="submit">Submit Request</button>
+
+</form>
+
+</div>
+
+
+<!-- ================= REQUESTED SECTION ================= -->
+
+<div class="section">
+
+<h2>Requested Locations</h2>
+
+<table>
+
+<thead>
+
+<tr>
+<th>S.N</th>
+<th>Location</th>
+<th>Address</th>
+<th>AQI</th>
+<th>Status</th>
+</tr>
+
+</thead>
+
+<tbody id="requestTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+
+<script>
+
+
+// ================= FIREBASE CONFIG =================
+
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyB8_9RTIIYTmk89M5OebiTmNW7JpJUD0ks",
+  authDomain: "airqualitymapping-feca1.firebaseapp.com",
+  databaseURL: "https://airqualitymapping-feca1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "airqualitymapping-feca1",
+  storageBucket: "airqualitymapping-feca1.firebasestorage.app",
+  messagingSenderId: "468955011792",
+  appId: "1:468955011792:web:08988bf166654da5185cd5"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+
+
+// ================= MAP SETUP =================
+
+var map = L.map('map').setView([27.7172,85.3240],12);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+maxZoom:19
+}).addTo(map);
+
+var marker;
+
+
+// ================= MAP CLICK =================
+
+map.on('click',function(e){
+
+var lat = e.latlng.lat;
+var lng = e.latlng.lng;
+
+setMarker(lat,lng);
+
+reverseGeocode(lat,lng);
+
+});
+
+
+// ================= SET MARKER =================
+
+function setMarker(lat,lng){
+
+document.getElementById("lat").value = lat;
+document.getElementById("lng").value = lng;
+
+if(marker){
+map.removeLayer(marker);
+}
+
+marker = L.marker([lat,lng]).addTo(map);
+
+}
+
+
+// ================= AUTO LOCATION =================
+
+function getLocation(){
+
+if(navigator.geolocation){
+
+navigator.geolocation.getCurrentPosition(function(pos){
+
+var lat = pos.coords.latitude;
+var lng = pos.coords.longitude;
+
+map.setView([lat,lng],15);
+
+setMarker(lat,lng);
+
+reverseGeocode(lat,lng);
+
+});
+
+}
+
+else{
+
+alert("Geolocation not supported");
+
+}
+
+}
+
+
+// ================= REVERSE GEOCODING =================
+
+function reverseGeocode(lat,lng){
+
+fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+
+.then(res=>res.json())
+
+.then(data=>{
+
+document.getElementById("address").value = data.display_name;
+
+});
+
+}
+
+
+// ================= SUBMIT REQUEST =================
+
+document.getElementById("requestForm").addEventListener("submit",function(e){
+
+e.preventDefault();
+
+var address = document.getElementById("address").value;
+var message = document.getElementById("message").value;
+var lat = document.getElementById("lat").value;
+var lng = document.getElementById("lng").value;
+
+if(lat=="" || lng==""){
+
+alert("Please select location");
+
+return;
+
+}
+
+db.ref("requests").push({
+
+address:address,
+message:message,
+lat:lat,
+lng:lng,
+aqi:"",
+status:"Incomplete",
+timestamp:Date.now()
+
+});
+
+alert("Request submitted");
+
+document.getElementById("requestForm").reset();
+
+});
+
+
+
+// ================= LOAD TABLE =================
+
+db.ref("requests").on("value",function(snapshot){
+
+var data = snapshot.val();
+
+var html="";
+var sn=1;
+
+map.eachLayer(function(layer){
+
+if(layer instanceof L.Marker && layer!=marker){
+
+map.removeLayer(layer);
+
+}
+
+});
+
+
+for(var id in data){
+
+var r = data[id];
+
+html+=`
+
+<tr>
+
+<td>${sn}</td>
+
+<td>${r.lat}, ${r.lng}</td>
+
+<td>${r.address}</td>
+
+<td>${r.aqi || "-"}</td>
+
+<td>${r.status}</td>
+
+</tr>
+
+`;
+
+L.marker([r.lat,r.lng])
+.addTo(map)
+.bindPopup(`Request Location <br>Status: ${r.status}`);
+
+sn++;
+
+}
+
+document.getElementById("requestTable").innerHTML = html;
+
+});
+
+
+</script>
+
+</body>
+</html>
