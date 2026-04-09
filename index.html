@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Leaflet Control Geocoder -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
 <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
   <meta charset="UTF-8">
@@ -25,14 +24,14 @@
       </div>
       <div class="nav-right">
         <a href="#" class="nav-link" onclick="scrollToSection('stats')">Insights</a>
-        <a href="#" class="nav-link" onclick="scrollToSection('readings')">Last Readings</a>
+        <a href="analysis.html" class="nav-link">Analysis</a>
         <a href="#" class="nav-link" onclick="scrollToSection('map')">Maps</a>
         <a href="request.html" class="nav-link">Request</a>
       </div>
     </div>
   </nav>
   <main class="container">
-    <!-- Current Air Quality Stats -->
+    
     <section id="stats" class="stats-section">
       <h2 class="section-title">Current Air Quality</h2>
       <div class="stats-grid">
@@ -43,19 +42,19 @@
       </div>
     </section>
 
-    <!-- Health Advisory -->
+   
     <section class="advisory-section">
       <div class="advisory-card"><h3>Health Advisory</h3><p id="healthAdvice">--</p></div>
     </section>
 
-    <!-- Last Readings -->
+    
     <section id="readings" class="last-readings">
       <h3>Last 30 km Readings</h3>
       <div id="readingsList" class="readings-list"></div>
       <div id="readingsLegend" class="readings-legend"></div>
     </section>
 
-    <!-- Interactive Map -->
+   
     <section id="map" class="map-section">
       <div class="map-controls">
         <h3>Air Quality Map</h3>
