@@ -299,3 +299,64 @@ setInterval(()=>{
   fetchHistory();
 
 },3000);
+
+
+
+
+
+// ================= HEALTH ADVISORY =================
+function updateHealthAdvisory(aqi) {
+  const advisoryDiv = document.getElementById("healthAdvice");
+  if (!advisoryDiv) return;
+
+  let advices = [];
+
+  if (aqi <= 50) { // Good
+    advices = [
+      "Air quality is good. Enjoy outdoor activities.",
+      "No special precautions needed.",
+      "Keep exercising outdoors as normal.",
+      "Maintain a balanced diet and hydrate.",
+      "Open windows to ventilate your room.",
+      "No mask required for healthy individuals.",
+      "Encourage children to play outside."
+    ];
+  } 
+  else if (aqi <= 100) { // Moderate
+    advices = [
+      "Sensitive people should reduce prolonged outdoor exertion.",
+      "Wear a mask if you have respiratory issues.",
+      "Limit outdoor activities if feeling unwell.",
+      "Keep windows closed during high traffic times.",
+      "Use air purifiers indoors if available.",
+      "Drink plenty of water to stay hydrated.",
+      "Monitor health if coughing or irritated."
+    ];
+  } 
+  else if (aqi <= 150) { // Unhealthy for sensitive
+    advices = [
+      "Avoid prolonged outdoor activities.",
+      "Wear a high-quality mask (N95/KN95) outdoors.",
+      "Keep children and elderly indoors as much as possible.",
+      "Close windows and use indoor air purifiers.",
+      "Avoid strenuous exercise outside.",
+      "Monitor any breathing difficulties.",
+      "Stay hydrated and maintain a healthy diet."
+    ];
+  } 
+  else { // Hazardous
+    advices = [
+      "Stay indoors and keep windows closed.",
+      "Use air purifiers and avoid fans that bring outdoor air.",
+      "Wear a high-quality mask if going outside is unavoidable.",
+      "Avoid all outdoor activities.",
+      "Limit exposure to sensitive individuals (children, elderly, respiratory patients).",
+      "Keep hydrated and rest.",
+      "Seek medical attention if feeling unwell.",
+      "Reduce physical exertion indoors as well."
+    ];
+  }
+
+  // Render advice as a list
+  advisoryDiv.innerHTML = advices.map(a => `• ${a}`).join("<br>");
+}
